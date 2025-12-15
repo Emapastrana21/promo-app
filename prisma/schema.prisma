@@ -1,0 +1,221 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- ENUMS ---
+enum offer_status {
+  active
+  pending
+  rejected
+  expired
+}
+
+enum user_role {
+  user
+  moderator
+  admin
+}
+
+enum vote_type {
+  upvote
+  downvote
+  report_stock
+}
+
+// --- AUTH ---
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  password      String?   // 👈 ¡AGREGÁ ESTA LÍNEA!
+  emailVerified DateTime?
+  image         String?
+  role          user_role @default(user)
+  
+  // 🏆 PUNTOS
+  points        Int       @default(0)
+
+  // 🌍 UBICACIÓN SEGURA (NUEVO)
+  location      String?
+
+  accounts      Account[]
+  sessions      Session[]
+  offers        offers[]
+  offer_votes   offer_votes[]
+  comments      Comment[]
+  favorites     Favorite[]
+  subscriptions PushSubscription[]
+  stockReports  StockReport[]
+  reports       Report[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// --- APP ---
+
+model categories {
+  id     Int      @id @default(autoincrement())
+  name   String   @db.VarChar(50)
+  slug   String   @unique @db.VarChar(50)
+  offers offers[]
+}
+
+model stores {
+  id       Int      @id @default(autoincrement())
+  name     String   @db.VarChar(100)
+  logo_url String?  @db.VarChar(255)
+  website  String?  @db.VarChar(255)
+  offers   offers[]
+}
+
+model offers {
+  id             String        @id @default(uuid()) 
+  title          String        @db.VarChar(500) 
+  price          Decimal       @db.Decimal(10, 2)
+  original_price Decimal?      @db.Decimal(10, 2)
+  link           String?       @db.Text
+  image_url      String?       @db.Text
+  latitude       Float?
+  longitude      Float?
+  status         offer_status? @default(pending)
+  votes_count    Int?          @default(0)
+  is_hot         Boolean?      @default(false)
+  created_at     DateTime?     @default(now()) @db.Timestamp(6)
+  
+  paymentMethods PaymentMethod[]
+  
+  store_id       Int?
+  stores         stores?       @relation(fields: [store_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  category_id    Int?
+  categories     categories?   @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_id        String?        
+  users          User?         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  offer_votes    offer_votes[]
+
+  comments       Comment[]
+  favoritedBy    Favorite[]
+  stockReports   StockReport[]
+  reports        Report[]
+}
+
+model offer_votes {
+  id         String    @id @default(uuid())
+  vote_type  vote_type
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  
+  offer_id   String?   
+  offers     offers?   @relation(fields: [offer_id], references: [id], onDelete: Cascade)
+  user_id    String?    
+  users      User?     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, offer_id])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  text      String   @db.Text
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  offerId   String
+  offer     offers   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  offerId   String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offer     offers   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, offerId])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique 
+  p256dh    String   
+  auth      String
+  
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+}
+
+model PaymentMethod {
+  id     Int      @id @default(autoincrement())
+  name   String   @unique 
+  slug   String   @unique 
+  offers offers[]
+}
+
+model StockReport {
+  id        String   @id @default(uuid())
+  status    String   
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  offerId   String
+  offer     offers   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, offerId])
+}
+
+model Report {
+  id        String   @id @default(uuid())
+  reason    String   
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  offerId   String
+  offer     offers   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, offerId])
+}
