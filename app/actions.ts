@@ -2,7 +2,7 @@
 
 import { prisma } from "./lib/db"
 import { revalidatePath } from "next/cache"
-// import { redirect } from "next/navigation" // 👈 Lo comentamos para que no de error falso
+import { redirect } from "next/navigation" 
 import { v2 as cloudinary } from 'cloudinary'
 import { auth } from "@/auth"
 import * as cheerio from 'cheerio';
@@ -101,8 +101,8 @@ export async function crearOferta(formData: FormData) {
   }
 
   revalidatePath("/");
-  // redirect("/"); 👈 ESTO ERA EL CULPABLE DEL ERROR ROJO
-  return { success: true }; // Ahora devolvemos "éxito" limpio
+  // redirect("/"); 👈 COMENTADO: Esto evita el cartel rojo al subir.
+  // No devolvemos nada (void) para que TypeScript no se queje.
 }
 
 export async function votar(idOferta: string) {
@@ -175,8 +175,7 @@ export async function borrarOferta(formData: FormData) {
   if (!soyDueño && !soyAdmin) throw new Error("No autorizado");
   await prisma.offers.delete({ where: { id } });
   revalidatePath("/");
-  // redirect("/"); // Comentado también por si acaso
-  return { success: true };
+  redirect("/"); // 👈 ESTE SÍ VA: Al borrar, tenemos que irnos al inicio obligatoriamente.
 }
 
 export async function actualizarOferta(formData: FormData) {
@@ -211,7 +210,7 @@ export async function actualizarOferta(formData: FormData) {
     }
   });
   revalidatePath("/"); revalidatePath(`/oferta/${id}`); 
-  return { success: true };
+  redirect(`/oferta/${id}`); // 👈 Este también lo dejamos para que te lleve a la oferta editada.
 }
 
 export async function alternarStock(formData: FormData) {
