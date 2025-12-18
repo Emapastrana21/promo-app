@@ -2,12 +2,12 @@
 
 import { prisma } from "./lib/db"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
+// import { redirect } from "next/navigation" // 👈 Lo comentamos para que no de error falso
 import { v2 as cloudinary } from 'cloudinary'
 import { auth } from "@/auth"
 import * as cheerio from 'cheerio';
 import webpush from 'web-push'; 
-import { hash } from "bcryptjs"; // 👈 IMPORTANTE: Agregado para encriptar contraseñas
+import { hash } from "bcryptjs"; 
 
 // --- 👮‍♂️ ZONA DE ADMINS ---
 const ADMINS = ["emapastri@gmail.com"]; 
@@ -15,7 +15,6 @@ const ADMINS = ["emapastri@gmail.com"];
 function esAdmin(email: string | null | undefined) {
     return email && ADMINS.includes(email);
 }
-// -------------------------
 
 // --- CONFIGURACIONES ---
 cloudinary.config({
@@ -24,7 +23,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
-// Configuración de Web Push (Notificaciones)
 if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
     webpush.setVapidDetails(
       process.env.VAPID_SUBJECT || 'mailto:test@test.com',
@@ -46,10 +44,8 @@ export async function crearOferta(formData: FormData) {
   const categoryName = (formData.get("category") as string) || "Varios";
   const link = formData.get("link") as string;
   
-  // 👇 ESTO ES LO NUEVO: Recibimos una lista de bancos
   const paymentsRaw = formData.getAll("payments") as string[]; 
   
-  // Procesamiento de imagen (igual que antes)
   const imageLink = formData.get("imageLink") as string;
   const imageFile = formData.get("image") as File;
   let finalImageUrl = null;
@@ -91,7 +87,6 @@ export async function crearOferta(formData: FormData) {
           stores: { connect: { id: store.id } },
           users: userEmail ? { connect: { email: userEmail } } : undefined,
           
-          // 👇 MÁGIA PARA GUARDAR MUCHOS BANCOS A LA VEZ
           paymentMethods: {
             connectOrCreate: paymentsRaw.map(p => ({
                 where: { name: p },
@@ -100,10 +95,14 @@ export async function crearOferta(formData: FormData) {
           }
         }
       });
-  } catch (error) { console.error("Error Prisma:", error); throw error; }
+  } catch (error) { 
+      console.error("Error Prisma:", error); 
+      throw error; 
+  }
 
   revalidatePath("/");
-  redirect("/");
+  // redirect("/"); 👈 ESTO ERA EL CULPABLE DEL ERROR ROJO
+  return { success: true }; // Ahora devolvemos "éxito" limpio
 }
 
 export async function votar(idOferta: string) {
@@ -162,7 +161,7 @@ export async function toggleFavorite(offerId: string) {
   }
 }
 
-// --- FUNCIONES SEGURAS (DUEÑO O ADMIN) ---
+// --- FUNCIONES SEGURAS ---
 
 export async function borrarOferta(formData: FormData) {
   "use server";
@@ -176,7 +175,8 @@ export async function borrarOferta(formData: FormData) {
   if (!soyDueño && !soyAdmin) throw new Error("No autorizado");
   await prisma.offers.delete({ where: { id } });
   revalidatePath("/");
-  redirect("/");
+  // redirect("/"); // Comentado también por si acaso
+  return { success: true };
 }
 
 export async function actualizarOferta(formData: FormData) {
@@ -210,7 +210,8 @@ export async function actualizarOferta(formData: FormData) {
       stores: { connect: { id: store.id } }
     }
   });
-  revalidatePath("/"); revalidatePath(`/oferta/${id}`); redirect(`/oferta/${id}`);
+  revalidatePath("/"); revalidatePath(`/oferta/${id}`); 
+  return { success: true };
 }
 
 export async function alternarStock(formData: FormData) {
@@ -231,7 +232,7 @@ export async function alternarStock(formData: FormData) {
   revalidatePath("/"); revalidatePath(`/oferta/${id}`);
 }
 
-// --- 🔔 NUEVAS FUNCIONES DE NOTIFICACIONES ---
+// --- NOTIFICACIONES ---
 
 export async function suscribirseNotificaciones(subscription: any) {
     "use server";
@@ -247,7 +248,6 @@ export async function suscribirseNotificaciones(subscription: any) {
         });
         return { success: true };
     } catch (error) {
-        console.log("Suscripción ya existente o error:", error);
         return { success: true }; 
     }
 }
@@ -286,7 +286,7 @@ export async function enviarAlertaMasiva(mensaje: string, url: string = "/") {
 }
 
 
-// --- NUEVA FUNCIÓN: REPORTAR STOCK (WAZE) ---
+// --- REPORTAR STOCK (WAZE) ---
 export async function reportarStock(offerId: string, status: 'YES' | 'NO') {
   "use server";
   const session = await auth();
@@ -323,8 +323,8 @@ export async function reportarStock(offerId: string, status: 'YES' | 'NO') {
       
       if (reportesNegativos >= 5) {
           await prisma.offers.update({
-              where: { id: offerId },
-              data: { status: 'expired' }
+            where: { id: offerId },
+            data: { status: 'expired' }
           });
       }
   }
@@ -332,7 +332,7 @@ export async function reportarStock(offerId: string, status: 'YES' | 'NO') {
   revalidatePath(`/oferta/${offerId}`);
 }
 
-// --- NUEVA FUNCIÓN: DENUNCIAR OFERTA 🚩 ---
+// --- DENUNCIAR OFERTA 🚩 ---
 export async function denunciarOferta(offerId: string, reason: string) {
   "use server";
   const session = await auth();
@@ -369,7 +369,7 @@ export async function denunciarOferta(offerId: string, reason: string) {
   return { success: true };
 }
 
-// --- ACTUALIZAR PERFIL Y ZONA ---
+// --- ACTUALIZAR PERFIL ---
 export async function actualizarPerfil(formData: FormData) {
   "use server";
   const session = await auth();
@@ -386,7 +386,7 @@ export async function actualizarPerfil(formData: FormData) {
   revalidatePath("/perfil");
 }
 
-// --- 🔐 NUEVA FUNCIÓN: REGISTRAR USUARIO (EMAIL + PASS) ---
+// --- REGISTRAR USUARIO ---
 export async function registrarUsuario(formData: FormData) {
   "use server";
   
@@ -398,7 +398,6 @@ export async function registrarUsuario(formData: FormData) {
       return { error: "Faltan datos completos." };
   }
 
-  // 1. Verificar si ya existe
   const existe = await prisma.user.findUnique({
       where: { email }
   });
@@ -407,16 +406,14 @@ export async function registrarUsuario(formData: FormData) {
       return { error: "Este email ya está registrado. Probá iniciar sesión." };
   }
 
-  // 2. Encriptar contraseña
   const hashedPassword = await hash(password, 10);
 
-  // 3. Crear usuario
   await prisma.user.create({
       data: {
           name,
           email,
           password: hashedPassword,
-          image: null, // Arranca sin foto
+          image: null, 
           role: 'user'
       }
   });
