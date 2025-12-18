@@ -4,8 +4,8 @@ import { crearOferta, obtenerDatosDelLink } from "../actions"
 import { useState } from "react"
 import toast from "react-hot-toast"
 import BackButton from "../components/BackButton"
+import { useRouter } from "next/navigation" // 👈 1. IMPORTANTE: Importamos el router
 
-// 👇 AGREGUÉ BANCO MACRO Y MÁS OPCIONES
 const BANCOS = [
     "Efectivo", "Mercado Pago", "Cuenta DNI", "MODO", 
     "Banco Galicia", "Banco Santander", "BBVA", "Banco Nación", 
@@ -14,13 +14,13 @@ const BANCOS = [
 ];
 
 export default function SubirOferta() {
+  const router = useRouter() // 👈 2. IMPORTANTE: Inicializamos el router
   const [tipoTienda, setTipoTienda] = useState<'fisica' | 'online'>('fisica');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isLoadingLink, setIsLoadingLink] = useState(false);
   const [scrapedData, setScrapedData] = useState<{title?: string, image?: string} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // ESTADO PARA SELECCIONAR MÚLTIPLES BANCOS
   const [selectedPayments, setSelectedPayments] = useState<string[]>([]);
 
   const togglePayment = (banco: string) => {
@@ -78,6 +78,13 @@ export default function SubirOferta() {
                 try {
                     await crearOferta(formData);
                     toast.success("¡Oferta publicada!", { id: toastId });
+                    
+                    // 👇 3. LA MAGIA: Esperamos 1 seg y nos vamos al inicio
+                    setTimeout(() => {
+                        router.push('/');
+                        router.refresh(); // Actualiza los datos del inicio para ver la oferta nueva
+                    }, 1000);
+
                 } catch (error) {
                     console.error(error);
                     setIsSubmitting(false);
@@ -122,7 +129,6 @@ export default function SubirOferta() {
               <div>
                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1 tracking-wider">Producto</label>
                 <input name="title" type="text" defaultValue={scrapedData?.title || ""} placeholder="Ej: Coca Cola 2.25L - 3x$1400" required className="w-full p-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-600 outline-none font-medium"/>
-                {/* Nota para el usuario sobre la descripción */}
                 <p className="text-[10px] text-gray-400 mt-1 ml-1">Tip: Si es una promo "3x2" o "2da al 50%", ponelo en el título.</p>
               </div>
               
@@ -140,7 +146,7 @@ export default function SubirOferta() {
                 </div>
               </div>
 
-              {/* 👇 SELECTOR MÚLTIPLE DE BANCOS (CHIPS) */}
+              {/* CHIPS DE BANCOS */}
               <div>
                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1 tracking-wider">
                     Medios de Pago ({selectedPayments.length})
@@ -162,7 +168,6 @@ export default function SubirOferta() {
                         </button>
                     ))}
                 </div>
-                {/* Inputs ocultos para enviar al servidor */}
                 {selectedPayments.map(p => (
                     <input key={p} type="hidden" name="payments" value={p} />
                 ))}
