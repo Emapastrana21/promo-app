@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Promo App
 
-## Getting Started
+![Next.js](https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
 
-First, run the development server:
+## 📖 Sobre el Proyecto
+**Promo App** es una aplicación web Full Stack desarrollada para gestionar promociones y usuarios de manera eficiente. Aprovecha el poder del *Server Side Rendering* de Next.js para un rendimiento óptimo.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠️ Stack Tecnológico
+Este proyecto integra las tecnologías más demandadas del mercado actual:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* **Frontend & Framework:** [Next.js 14+] con React.
+* **Estilos:** [Tailwind CSS] para un diseño moderno y responsivo.
+* **Base de Datos:** [Prisma ORM] para la gestión de datos segura y tipada.
+* **Autenticación:** Sistema seguro de login (Auth.js/NextAuth).
+* **Lenguaje:** [TypeScript] para un código robusto y escalable.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ✨ Funcionalidades Clave
+* ✅ Sistema de autenticación de usuarios.
+* ✅ Conexión optimizada a base de datos con Prisma.
+* ✅ Interfaz de usuario moderna y adaptable (Responsive).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Cómo correr el proyecto localmente
 
-## Learn More
+1.  Clona el repositorio:
+    ```bash
+    git clone [https://github.com/Emapastrana21/promo-app.git](https://github.com/Emapastrana21/promo-app.git)
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+2.  Instala las dependencias:
+    ```bash
+    npm install
+    # o
+    yarn install
+    ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3.  Configura las variables de entorno (crea un archivo `.env` basado en tu configuración de Prisma/Auth).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4.  Corre el servidor de desarrollo:
+    ```bash
+    npm run dev
+    ```
 
-## Deploy on Vercel
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver el resultado.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+Hecho con ❤️ por **Emanuel Pastrana**
+[Visita mi LinkedIn](https://www.linkedin.com/in/emanuelpastrana/)
